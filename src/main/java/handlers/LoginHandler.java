@@ -14,6 +14,7 @@ import utils.Utils;
 
 import java.util.HashMap;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Objects;
 
 @AllArgsConstructor
@@ -35,7 +36,9 @@ public class LoginHandler implements IHandler {
                     return response.withStatusCode(401)
                             .withBody("Authorization failed. Username or password is incorrect");
                 }
-                HashMap<String, String> tokenObject = Utils.jsonToObject(userData, HashMap.class);
+                logger.log("User data:" + userData);
+                HashMap<String, String> tokenObject = (HashMap<String, String>) Utils.jsonToObject(userData, List.class).get(0);
+                logger.log("Object:" + tokenObject);
                 tokenObject.put("expiration", new DateTime().plusHours(4).toString());
                 String token = JWT.create()
                         .withPayload(Utils.objectToJson(tokenObject))
