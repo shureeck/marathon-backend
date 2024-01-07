@@ -9,7 +9,7 @@ public class Secret {
     private static Secret secret = null;
     private HashMap<String, Object> secretValue;
     @Getter
-    private String secretName = "cvbuilder-postgres";
+    private String secretName = "postgers-secret-credentials";
     private boolean valid = false;
 
     private Secret() {
@@ -38,7 +38,6 @@ public class Secret {
             System.out.println(secretValue.get(key));
             Object value = secretValue.get(key);
             return String.valueOf(value);
-
         }
     }
 

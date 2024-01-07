@@ -2,10 +2,8 @@ package dao;
 
 import lombok.AllArgsConstructor;
 import lombok.NoArgsConstructor;
-import lombok.Setter;
 import utils.Utils;
 
-import java.awt.desktop.AppReopenedEvent;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -17,6 +15,9 @@ import java.util.Objects;
 @AllArgsConstructor
 @NoArgsConstructor
 public class MarathonListDao extends PostgreDaoAbstract {
+    private static final String INSERT = "INSERT INTO marathon.marathon_list " +
+            "(name, description, owner, is_active) " +
+            "VALUES (?, ?, ?,false);";
     private int userID = -1;
 
     @Override
@@ -28,7 +29,7 @@ public class MarathonListDao extends PostgreDaoAbstract {
                 + "where a.user_id = ?;";
         try (Connection connection = getConnection();
              PreparedStatement statement = connection.prepareStatement(query)) {
-            if (userID>0){
+            if (userID > 0) {
                 statement.setInt(1, userID);
             }
             ResultSet resultSet = statement.executeQuery();
@@ -59,7 +60,22 @@ public class MarathonListDao extends PostgreDaoAbstract {
     }
 
     @Override
-    public <T> T put(String string) {
-        return null;
+    public String put(String string) {
+        HashMap<String, String> body = Utils.jsonToObject(string, HashMap.class);
+        try (Connection connection = getConnection();
+             PreparedStatement statement = connection.prepareStatement(INSERT)) {
+            statement.setString(1, body.get("name"));
+            statement.setString(2, body.get("description"));
+            statement.setInt(3, userID);
+            int result = statement.executeUpdate();
+            if (result == 1) {
+                return "";
+            } else {
+                return null;
+            }
+        } catch (SQLException exception) {
+            exception.printStackTrace();
+            return exception.getMessage();
+        }
     }
 }
