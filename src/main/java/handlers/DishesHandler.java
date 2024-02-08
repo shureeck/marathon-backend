@@ -6,7 +6,9 @@ import dao.Dao;
 import dao.DishesDao;
 import lombok.AllArgsConstructor;
 
+import java.util.HashMap;
 import java.util.LinkedHashMap;
+import java.util.Objects;
 
 @AllArgsConstructor
 public class DishesHandler implements IHandler {
@@ -17,9 +19,13 @@ public class DishesHandler implements IHandler {
         logger.log("Handler: DishesHandler");
         String method = (String) request.get("httpMethod");
         logger.log("Method: " + method);
+        HashMap<String, String> parameters = (HashMap<String, String>) request.get("queryStringParameters");
         switch (method) {
             case "GET":
                 Dao dao = new DishesDao();
+                if (Objects.nonNull(parameters)&&parameters.containsKey("id")){
+                    ((DishesDao)dao).setId(Integer.valueOf(parameters.get("id")));
+                }
                 return response
                         .withStatusCode(200)
                         .withBody(dao.get());

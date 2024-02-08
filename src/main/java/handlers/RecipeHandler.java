@@ -20,10 +20,10 @@ public class RecipeHandler implements IHandler {
         logger.log("Handler: RecipeHandler");
         String method = (String) request.get("httpMethod");
         logger.log("Method: " + method);
+        HashMap<String, String> recipe = Utils.jsonToObject((String) request.get("body"), HashMap.class);
+        Dao daoDishes = new DishesDao();
         switch (method) {
             case "POST":
-                HashMap<String, String> recipe = Utils.jsonToObject((String) request.get("body"), HashMap.class);
-                Dao daoDishes = new DishesDao();
                 Dao daoCooking;
                 int id;
                 try {
@@ -38,6 +38,18 @@ public class RecipeHandler implements IHandler {
                 return response
                         .withStatusCode(200)
                         .withBody(Utils.objectToJson(recipe));
+            case "PATCH":
+                id = Integer.valueOf(recipe.get("id"));
+                ((DishesDao) daoDishes).setId(id);
+                String titleUpdateResult = ((DishesDao) daoDishes).update(recipe.get("tittle"));
+                daoCooking = new CookingDao(id);
+                String recipeUpdate = ((CookingDao) daoCooking).update(recipe.get("text"));
+                if (titleUpdateResult.isEmpty() && recipeUpdate.isEmpty()) {
+                  return  response.withStatusCode(201);
+                } else {
+                   return response.withStatusCode(500).withBody((titleUpdateResult + " " + recipeUpdate).trim());
+                }
+
             default:
                 return response.withStatusCode(400)
                         .withBody(String.format("Method %s is not supported.", method));

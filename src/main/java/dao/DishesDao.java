@@ -1,5 +1,6 @@
 package dao;
 
+import lombok.Setter;
 import utils.Utils;
 
 import java.sql.Connection;
@@ -9,12 +10,19 @@ import java.sql.SQLException;
 import java.util.HashMap;
 
 public class DishesDao extends PostgreDaoAbstract {
+    @Setter
+    private int id = -1;
 
     @Override
     public String get() {
-        String query = "select * from marathon.dishes;";
+        String query = id < 0
+                ? "select * from marathon.dishes;"
+                : "select * from marathon.dishes where id = ?;";
         try (Connection connection = getConnection();
              PreparedStatement statement = connection.prepareStatement(query)) {
+            if (id > 0) {
+                statement.setInt(1, id);
+            }
             ResultSet rs = statement.executeQuery();
             HashMap<String, String> map = new HashMap<>();
             while (rs.next()) {
@@ -50,6 +58,26 @@ public class DishesDao extends PostgreDaoAbstract {
             } else {
                 throw new IllegalStateException(exception.getMessage());
             }
+        }
+    }
+
+    public String update(String tittle) {
+        String query = "UPDATE marathon.dishes SET tittle = ? WHERE id = ?";
+        try (Connection connection = getConnection();
+             PreparedStatement statement = connection.prepareStatement(query)) {
+            statement.setString(1, tittle);
+            statement.setInt(2, id);
+            int num = statement.executeUpdate();
+            if (num == 1) {
+                return "";
+            } else if (num == 0) {
+                return String.format("Заголовок рецепту %s не був збережений", tittle);
+            } else {
+                return String.format("%d заголовків рецептів було оновлено замість 1", num);
+            }
+        } catch (SQLException exception) {
+            exception.printStackTrace();
+            throw new IllegalStateException(exception.getMessage());
         }
     }
 }

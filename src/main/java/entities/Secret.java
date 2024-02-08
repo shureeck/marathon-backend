@@ -9,7 +9,7 @@ public class Secret {
     private static Secret secret = null;
     private HashMap<String, Object> secretValue;
     @Getter
-    private String secretName = "postgers-secret-credentials";
+    private String secretName = "postgres_ec2";
     private boolean valid = false;
 
     private Secret() {

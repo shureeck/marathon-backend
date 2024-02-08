@@ -1,7 +1,9 @@
 package dao;
 
 import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.NoArgsConstructor;
+import lombok.Value;
 import utils.Utils;
 
 import java.sql.Connection;
@@ -12,23 +14,30 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Objects;
 
-@AllArgsConstructor
-@NoArgsConstructor
+@Builder
 public class MarathonListDao extends PostgreDaoAbstract {
     private static final String INSERT = "INSERT INTO marathon.marathon_list " +
             "(name, description, owner, is_active) " +
             "VALUES (?, ?, ?,false);";
+    private static final String SELECT_FOR_DISH = "select distinct ml.name from marathon.marathon m " +
+            "join marathon.marathon_list ml  on m.marathon_id = ml.marathon_id " +
+            "where  dishes_id = ?";
+
     private int userID = -1;
+    private int dishID = -1;
 
     @Override
     public String get() {
-        String query = userID < 0
+        String query = userID == 0
                 ? "select * from marathon.marathon_list m order by m.marathon_id;"
                 : "select m.marathon_id,  m.name, a.is_active from marathon.marathon_list m "
                 + "join marathon.marathon_assign a on a.marathon_id = m.marathon_id "
                 + "where a.user_id = ?;";
         try (Connection connection = getConnection();
              PreparedStatement statement = connection.prepareStatement(query)) {
+            if (dishID > 0) {
+                return getMarafonListForDish(connection);
+            }
             if (userID > 0) {
                 statement.setInt(1, userID);
             }
@@ -57,6 +66,24 @@ public class MarathonListDao extends PostgreDaoAbstract {
             exception.printStackTrace();
         }
         return null;
+    }
+
+    private String getMarafonListForDish(Connection connection) {
+        try (PreparedStatement statement = connection.prepareStatement(SELECT_FOR_DISH)) {
+            statement.setInt(1, dishID);
+            ResultSet resultSet = statement.executeQuery();
+            if (Objects.isNull(resultSet)) {
+                return null;
+            }
+            ArrayList<String> result = new ArrayList<>();
+            while (resultSet.next()) {
+                result.add(resultSet.getString("name"));
+            }
+            return Utils.objectToJson(result);
+        } catch (SQLException exception) {
+            exception.printStackTrace();
+            return exception.getMessage();
+        }
     }
 
     @Override

@@ -1,10 +1,7 @@
 import com.auth0.jwt.JWT;
 import com.auth0.jwt.JWTVerifier;
 import com.auth0.jwt.algorithms.Algorithm;
-import dao.Dao;
-import dao.DishesDao;
-import dao.MarathonListDao;
-import dao.UsersDao;
+import dao.*;
 import utils.Utils;
 
 import java.util.HashMap;
@@ -12,7 +9,7 @@ import java.util.Map;
 
 public class Start {
     public static void main(String... args) {
-        Dao dao = new UsersDao("poliakovaleek@gmail.com", "qwerty1234");
+        Dao dao = new  CookingDao(376);;
         String userData = dao.get();
         Map<String, String> a =  Map.of("user", "Oleksandr", "role", "Admin");
         String token = JWT.create()

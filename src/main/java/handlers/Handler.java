@@ -67,7 +67,7 @@ public class Handler {
             case "/dishes":
                 handler = new DishesHandler(logger);
                 break;
-            case "/recipe":
+                case "/recipe":
                 handler = new RecipeHandler(logger);
                 break;
             case "/login":

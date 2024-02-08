@@ -14,14 +14,13 @@ public class CookingDao extends PostgreDaoAbstract {
 
     @Override
     public String get() {
-        String query = "select d.tittle, c.description from marathon.cooking c \n"
-                + "join marathon.dishes d on d.id = c.dish_id and d.id = ?;";
+        String query = "select description from marathon.cooking where dish_id = ?;";
         try (Connection connection = getConnection();
              PreparedStatement statement = connection.prepareStatement(query)) {
             statement.setInt(1, id);
             ResultSet resultSet = statement.executeQuery();
             if (resultSet.next()) {
-                return "<h2>" + resultSet.getString(1) + "</h2>" + resultSet.getString(2);
+                return resultSet.getString(1);
             } else {
                 return null;
             }
@@ -42,6 +41,26 @@ public class CookingDao extends PostgreDaoAbstract {
             statement.executeQuery();
 
             return null;
+        } catch (SQLException exception) {
+            exception.printStackTrace();
+        }
+        return null;
+    }
+
+    public String update(String string) {
+        String query = "UPDATE marathon.cooking SET description = ? WHERE dish_id = ?;";
+        try (Connection connection = getConnection();
+             PreparedStatement statement = connection.prepareStatement(query)) {
+            statement.setString(1, string);
+            statement.setInt(2, id);
+            int num = statement.executeUpdate();
+            if (num == 1) {
+                return "";
+            } else if (num == 0) {
+                return String.format("Рецепту %d не був збережений", id);
+            } else {
+                return String.format("%d рецептів було оновлено замість 1", num);
+            }
         } catch (SQLException exception) {
             exception.printStackTrace();
         }
