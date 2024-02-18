@@ -99,16 +99,23 @@ public class MarathonDao extends PostgreDaoAbstract {
         String query = "insert into marathon.marathon " +
                 "(week_id, day_id, schedule_id, dishes_id, value, marathon_id) " +
                 "values (?, ?, ?, ?, ?, ?);";
-        HashMap<String, String> map = Utils.jsonToObject(string, HashMap.class);
+        System.out.println(string);
+        HashMap<String, Object> map = Utils.jsonToObject(string, HashMap.class);
+        ArrayList<String> days = (ArrayList<String>) map.get("day");
+        System.out.println(days.size());
+        System.out.println(String.join("; ",days));
         try (Connection connection = getConnection();
              PreparedStatement statement = connection.prepareStatement(query)) {
-            statement.setInt(1, Integer.parseInt(map.get("week")));
-            statement.setInt(2, Integer.parseInt(map.get("day")));
-            statement.setInt(3, Integer.parseInt(map.get("sceduler")));
-            statement.setInt(4, Integer.parseInt(map.get("food")));
-            statement.setString(5, map.get("quantity"));
-            statement.setInt(6, Integer.parseInt(map.get("marathon_id")));
-            statement.executeUpdate();
+            for (String day: days) {
+                statement.setInt(1, Integer.parseInt((String) map.get("week")));
+                statement.setInt(2, Integer.parseInt(day));
+                statement.setInt(3, Integer.parseInt((String) map.get("sceduler")));
+                statement.setInt(4, Integer.parseInt((String) map.get("food")));
+                statement.setString(5, (String) map.get("quantity"));
+                statement.setInt(6, Integer.parseInt((String) map.get("marathon_id")));
+                statement.addBatch();
+            }
+            statement.executeBatch();
             return null;
         } catch (SQLException exception) {
             exception.printStackTrace();

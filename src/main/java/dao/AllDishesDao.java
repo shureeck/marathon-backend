@@ -19,10 +19,18 @@ public class AllDishesDao extends PostgreDaoAbstract {
             while (rs.next()) {
                 String recipeID = rs.getString(1);
                 String tittle = rs.getString(2);
-
-                String key = String.valueOf(tittle.charAt(0)).toLowerCase();
+                int c = 0;
+                String key = "";
+                while (c < (tittle.length() - 1)) {
+                    key = String.valueOf(tittle.charAt(c)).toLowerCase();
+                    if (key.matches("[A-Za-zА-Яа-я]")) {
+                        break;
+                    }
+                    c++;
+                }
+                String finalKey = key;
                 GraficEntity graficEntity = result.stream()
-                        .filter((p) -> (p.getName().equalsIgnoreCase(key)))
+                        .filter((p) -> (p.getName().equalsIgnoreCase(finalKey)))
                         .findFirst().orElse(null);
                 if (Objects.isNull(graficEntity)) {
                     graficEntity = new GraficEntity(key, null);
