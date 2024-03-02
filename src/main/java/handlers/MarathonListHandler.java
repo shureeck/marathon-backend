@@ -14,6 +14,8 @@ import java.util.Objects;
 @AllArgsConstructor
 public class MarathonListHandler implements IHandler {
     private LambdaLogger logger;
+    private String userRole;
+    private int userId;
 
     @Override
     public APIGatewayProxyResponseEvent handle(LinkedHashMap<String, Object> request, APIGatewayProxyResponseEvent response) {
@@ -24,8 +26,8 @@ public class MarathonListHandler implements IHandler {
         Dao dao;
         switch (method) {
             case "GET":
-                if (Objects.nonNull(parameters) && parameters.containsKey("user")) {
-                    dao = MarathonListDao.builder().userID(Integer.valueOf(parameters.get("user"))).build();
+                if (Objects.nonNull(userRole) && !userRole.equalsIgnoreCase("admin")) {
+                    dao = MarathonListDao.builder().userID(userId).build();
                 } else if (Objects.nonNull(parameters) && parameters.containsKey("dish")) {
                     dao = MarathonListDao.builder().dishID(Integer.valueOf(parameters.get("dish"))).build();
                 } else {

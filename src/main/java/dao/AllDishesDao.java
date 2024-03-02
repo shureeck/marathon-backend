@@ -1,7 +1,6 @@
 package dao;
 
 import entities.GraficEntity;
-import entities.RecipeEntity;
 import utils.Utils;
 
 import java.sql.*;

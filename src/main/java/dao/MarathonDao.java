@@ -4,44 +4,33 @@ import entities.DayEntity;
 import entities.GraficEntity;
 import entities.WeekEntity;
 import enums.Days;
-import lombok.Setter;
+import lombok.Builder;
 import utils.Utils;
 
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
+import java.sql.*;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
 
+@Builder
 public class MarathonDao extends PostgreDaoAbstract {
-    @Setter
     private int id = -1;
+    private int userId;
+    private String userRole;
 
     @Override
     public String get() {
-        String query = "select m.week_id, m.day_id, s.tittle, s.timeset, d.tittle, m.value, c.dish_id id from marathon.marathon m "
-                + "inner join marathon.marathon_list ml on ml.is_active = true and ml.marathon_id=m.marathon_id "
-                + "inner join marathon.schedule s on m.schedule_id = s.id "
-                + "inner join marathon.dishes d on m.dishes_id = d.id "
-                + "inner join marathon.cooking c on c.dish_id = d.id "
-                + "order by m.week_id, m.day_id, m.schedule_id;";
-        if (id > 0) {
-            query = "select m.week_id, m.day_id, s.tittle, s.timeset, d.tittle, m.value, c.dish_id id from marathon.marathon m "
-                    + "inner join marathon.schedule s on m.schedule_id = s.id "
-                    + "inner join marathon.dishes d on m.dishes_id = d.id "
-                    + "inner join marathon.cooking c on c.dish_id = d.id "
-                    + "where m.marathon_id = ? "
-                    + "order by m.week_id, m.day_id, m.schedule_id;";
-        }
-
-
-        try (Connection connection = getConnection();
-             PreparedStatement statement = connection.prepareStatement(query)) {
-            if (id > 0) {
-                statement.setInt(1, id);
+        try (Connection connection = getConnection()) {
+            PreparedStatement statement;
+            if (id <= 0) {
+                if (Objects.nonNull(userRole) && userRole.equalsIgnoreCase("admin")) {
+                    statement = prepareAdminStatement(connection);
+                } else {
+                    statement = prepareUserStatement(connection);
+                }
+            } else {
+                statement = prepareIdStatement(connection);
             }
             ResultSet resultSet = statement.executeQuery();
             if (Objects.isNull(resultSet)) {
@@ -103,10 +92,10 @@ public class MarathonDao extends PostgreDaoAbstract {
         HashMap<String, Object> map = Utils.jsonToObject(string, HashMap.class);
         ArrayList<String> days = (ArrayList<String>) map.get("day");
         System.out.println(days.size());
-        System.out.println(String.join("; ",days));
+        System.out.println(String.join("; ", days));
         try (Connection connection = getConnection();
              PreparedStatement statement = connection.prepareStatement(query)) {
-            for (String day: days) {
+            for (String day : days) {
                 statement.setInt(1, Integer.parseInt((String) map.get("week")));
                 statement.setInt(2, Integer.parseInt(day));
                 statement.setInt(3, Integer.parseInt((String) map.get("sceduler")));
@@ -168,5 +157,40 @@ public class MarathonDao extends PostgreDaoAbstract {
             exception.printStackTrace();
             return exception.getMessage();
         }
+    }
+
+    private PreparedStatement prepareAdminStatement(Connection connection) throws SQLException {
+        String adminQuery = "select m.week_id, m.day_id, s.tittle, s.timeset, d.tittle, m.value, c.dish_id id from marathon.marathon m "
+                + "inner join marathon.marathon_list ml on ml.is_active = true and ml.marathon_id=m.marathon_id "
+                + "inner join marathon.schedule s on m.schedule_id = s.id "
+                + "inner join marathon.dishes d on m.dishes_id = d.id "
+                + "inner join marathon.cooking c on c.dish_id = d.id "
+                + "order by m.week_id, m.day_id, m.schedule_id;";
+        PreparedStatement statement = connection.prepareStatement(adminQuery);
+        return statement;
+    }
+
+    private PreparedStatement prepareUserStatement(Connection connection) throws SQLException {
+        String userQuery = "select m.week_id, m.day_id, s.tittle, s.timeset, d.tittle, m.value, c.dish_id id from marathon.marathon m "
+                + "inner join marathon.marathon.marathon_assign ma on ma.is_active = true and ma.marathon_id = m.marathon_id and ma.user_id = ?"
+                + "inner join marathon.schedule s on m.schedule_id = s.id "
+                + "inner join marathon.dishes d on m.dishes_id = d.id "
+                + "inner join marathon.cooking c on c.dish_id = d.id "
+                + "order by m.week_id, m.day_id, m.schedule_id;";
+        PreparedStatement statement = connection.prepareStatement(userQuery);
+        statement.setInt(1, userId);
+        return statement;
+    }
+
+    private PreparedStatement prepareIdStatement(Connection connection) throws SQLException {
+        String marathonQuery = "select m.week_id, m.day_id, s.tittle, s.timeset, d.tittle, m.value, c.dish_id id from marathon.marathon m "
+                + "inner join marathon.schedule s on m.schedule_id = s.id "
+                + "inner join marathon.dishes d on m.dishes_id = d.id "
+                + "inner join marathon.cooking c on c.dish_id = d.id "
+                + "where m.marathon_id = ? "
+                + "order by m.week_id, m.day_id, m.schedule_id;";
+        PreparedStatement statement = connection.prepareStatement(marathonQuery);
+        statement.setInt(1, id);
+        return statement;
     }
 }

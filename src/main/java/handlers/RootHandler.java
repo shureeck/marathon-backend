@@ -14,6 +14,8 @@ import java.util.Objects;
 @AllArgsConstructor
 public class RootHandler implements IHandler {
     private LambdaLogger logger;
+    private String userRole;
+    private int userId;
 
     @Override
     public APIGatewayProxyResponseEvent handle(LinkedHashMap<String, Object> request, APIGatewayProxyResponseEvent response) {
@@ -28,7 +30,7 @@ public class RootHandler implements IHandler {
                         : getDataForGetMarathon(response, parameters);
             case "POST":
                 logger.log("Method: RootHandler::POST");
-                Dao dao = new MarathonDao();
+                Dao dao = MarathonDao.builder().build();
                 try {
                     return response
                             .withStatusCode(200)
@@ -43,7 +45,7 @@ public class RootHandler implements IHandler {
                 if (!validation.isEmpty()) {
                     return response.withStatusCode(400).withBody(validation);
                 }
-                Dao marathonDao = new MarathonDao();
+                Dao marathonDao = MarathonDao.builder().build();
                 String result = ((MarathonDao) marathonDao).delete(parameters);
                 if (result.isEmpty()) {
                     return response.withStatusCode(200);
@@ -58,10 +60,11 @@ public class RootHandler implements IHandler {
 
     private APIGatewayProxyResponseEvent getDataForGetMarathon(APIGatewayProxyResponseEvent response,
                                                                HashMap<String, String> parameters) {
-        Dao dao = new MarathonDao();
+        int id = -1;
         if (Objects.nonNull(parameters) && parameters.containsKey("id")) {
-            ((MarathonDao) dao).setId(Integer.valueOf(parameters.get("id")));
+            id = Integer.valueOf(parameters.get("id"));
         }
+        Dao dao = MarathonDao.builder().id(id).userId(userId).userRole(userRole).build();
         return response.withStatusCode(200).withBody(dao.get());
     }
 

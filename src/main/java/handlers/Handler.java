@@ -33,6 +33,8 @@ public class Handler {
         /**
          * Autorization check
          */
+        String role = null;
+        int userId = -1;
         String token = (String) ((HashMap<String, Object>) object.get("headers"))
                 .get("Authorization");
         if (!path.equals("/login")) {
@@ -40,6 +42,8 @@ public class Handler {
                 JWTVerifier verifier = JWT.require(Algorithm.HMAC256("key".getBytes())).build();
                 try {
                     DecodedJWT decodedJWT = verifier.verify(token);
+                    role = decodedJWT.getClaims().get("role").asString();
+                    userId = Integer.parseInt(decodedJWT.getClaims().get("id").asString());
                 } catch (SignatureVerificationException e) {
                     logger.log(e.getMessage());
                     return response.withStatusCode(401).withBody("{\"message\":" + e.getMessage() + "}");
@@ -56,7 +60,7 @@ public class Handler {
 
         switch (path) {
             case "/":
-                handler = new RootHandler(logger);
+                handler = new RootHandler(logger, role, userId);
                 break;
             case "/all":
                 handler = new AllRecipesHandler(logger);
@@ -67,20 +71,20 @@ public class Handler {
             case "/dishes":
                 handler = new DishesHandler(logger);
                 break;
-                case "/recipe":
+            case "/recipe":
                 handler = new RecipeHandler(logger);
                 break;
             case "/login":
                 handler = new LoginHandler(logger);
                 break;
             case "/marathon_list":
-                handler = new MarathonListHandler(logger);
+                handler = new MarathonListHandler(logger, role, userId);
                 break;
             case "/users":
                 handler = new UsersHandler(logger);
                 break;
             case "/marathonTittle":
-                handler = new MarathonTitleHandler(logger);
+                handler = new MarathonTitleHandler(logger, role, userId);
                 break;
             default:
                 return response

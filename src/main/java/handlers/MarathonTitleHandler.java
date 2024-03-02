@@ -3,6 +3,7 @@ package handlers;
 import com.amazonaws.services.lambda.runtime.LambdaLogger;
 import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyResponseEvent;
 import dao.Dao;
+import dao.MarathonDao;
 import dao.MarathonListDao;
 import dao.MarathonListHeaderDao;
 import lombok.AllArgsConstructor;
@@ -14,6 +15,8 @@ import java.util.Objects;
 @AllArgsConstructor
 public class MarathonTitleHandler implements IHandler {
     private LambdaLogger logger;
+    private String userRole;
+    private int userId;
 
     @Override
     public APIGatewayProxyResponseEvent handle(LinkedHashMap<String, Object> request, APIGatewayProxyResponseEvent response) {
@@ -23,12 +26,11 @@ public class MarathonTitleHandler implements IHandler {
         HashMap<String, String> parameters = (HashMap<String, String>) request.get("queryStringParameters");
         switch (method) {
             case "GET":
-                Dao dao;
+                int id = -1;
                 if (Objects.nonNull(parameters) && parameters.containsKey("id")) {
-                    dao = new MarathonListHeaderDao(Integer.valueOf(parameters.get("id")));
-                } else {
-                    dao = new MarathonListHeaderDao();
+                    id = Integer.valueOf(parameters.get("id"));
                 }
+                Dao dao = MarathonListHeaderDao.builder().marathonId(id).userId(userId).userRole(userRole).build();
                 return response.withStatusCode(200)
                         .withBody(dao.get());
             default:
