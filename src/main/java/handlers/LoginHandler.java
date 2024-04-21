@@ -6,7 +6,6 @@ import com.amazonaws.services.lambda.runtime.events.APIGatewayV2HTTPEvent;
 import com.auth0.jwt.JWT;
 import com.auth0.jwt.algorithms.Algorithm;
 import dao.Dao;
-import dao.DishesDao;
 import dao.UsersDao;
 import lombok.AllArgsConstructor;
 import org.joda.time.DateTime;
@@ -30,7 +29,10 @@ public class LoginHandler implements IHandler {
         switch (method) {
             case "POST":
                 HashMap<String, String> credentials = Utils.jsonToObject((String) request.get("body"), HashMap.class);
-                Dao dao = new UsersDao(credentials.get("username"), credentials.get("password"));
+                Dao dao = UsersDao.builder()
+                        .userName(credentials.get("username"))
+                        .password(credentials.get("password"))
+                        .build();
                 String userData = dao.get();
                 if (Objects.isNull(userData)) {
                     return response.withStatusCode(401)

@@ -45,17 +45,21 @@ public class MarathonDao extends PostgreDaoAbstract {
 
     private String prosesResultSet(ResultSet rs) throws SQLException {
         ArrayList<WeekEntity> weeks = new ArrayList<>();
+        String marathonId = null;
         while (rs.next()) {
-            String week = "Тиждень " + rs.getString(1);
-            String day = getDay(rs.getInt(2));
-            String eatName = rs.getString(3);
-            String time = rs.getString(4);
-
-            String food = rs.getString(5);
-            if (Objects.nonNull(rs.getString(6))) {
-                food = rs.getString(6) + " " + food;
+            if (Objects.isNull(marathonId)) {
+                marathonId = rs.getString("marathon_id");
             }
-            String recipeId = rs.getString(7);
+            String week = "Тиждень " + rs.getString("week_id");
+            String day = getDay(rs.getInt("day_id"));
+            String eatName = rs.getString("tittle");
+            String time = rs.getString("timeset");
+
+            String food = rs.getString("food");
+            if (Objects.nonNull(rs.getString("value"))) {
+                food = rs.getString("value") + " " + food;
+            }
+            String recipeId = rs.getString("id");
 
             Map<String, String> foodMap = Map.of(food, recipeId);
 
@@ -75,7 +79,10 @@ public class MarathonDao extends PostgreDaoAbstract {
                 entity.addDay(weekEntity.getDays().get(0));
             }
         }
-        return Utils.objectToJson(weeks);
+        HashMap<String, Object> result = new HashMap<>();
+        result.put("marathonId", marathonId);
+        result.put("weeks", weeks);
+        return Utils.objectToJson(result);
     }
 
     private String getDay(int i) {
@@ -160,7 +167,7 @@ public class MarathonDao extends PostgreDaoAbstract {
     }
 
     private PreparedStatement prepareAdminStatement(Connection connection) throws SQLException {
-        String adminQuery = "select m.week_id, m.day_id, s.tittle, s.timeset, d.tittle, m.value, c.dish_id id from marathon.marathon m "
+        String adminQuery = "select m.marathon_id, m.week_id, m.day_id, s.tittle, s.timeset, d.tittle food, m.value, c.dish_id id from marathon.marathon m "
                 + "inner join marathon.marathon_list ml on ml.is_active = true and ml.marathon_id=m.marathon_id "
                 + "inner join marathon.schedule s on m.schedule_id = s.id "
                 + "inner join marathon.dishes d on m.dishes_id = d.id "
@@ -171,7 +178,7 @@ public class MarathonDao extends PostgreDaoAbstract {
     }
 
     private PreparedStatement prepareUserStatement(Connection connection) throws SQLException {
-        String userQuery = "select m.week_id, m.day_id, s.tittle, s.timeset, d.tittle, m.value, c.dish_id id from marathon.marathon m "
+        String userQuery = "select m.marathon_id, m.week_id, m.day_id, s.tittle, s.timeset, d.tittle food, m.value, c.dish_id id from marathon.marathon m "
                 + "inner join marathon.marathon.marathon_assign ma on ma.is_active = true and ma.marathon_id = m.marathon_id and ma.user_id = ?"
                 + "inner join marathon.schedule s on m.schedule_id = s.id "
                 + "inner join marathon.dishes d on m.dishes_id = d.id "
@@ -183,7 +190,7 @@ public class MarathonDao extends PostgreDaoAbstract {
     }
 
     private PreparedStatement prepareIdStatement(Connection connection) throws SQLException {
-        String marathonQuery = "select m.week_id, m.day_id, s.tittle, s.timeset, d.tittle, m.value, c.dish_id id from marathon.marathon m "
+        String marathonQuery = "select m.marathon_id, m.week_id, m.day_id, s.tittle, s.timeset, d.tittle food, m.value, c.dish_id id from marathon.marathon m "
                 + "inner join marathon.schedule s on m.schedule_id = s.id "
                 + "inner join marathon.dishes d on m.dishes_id = d.id "
                 + "inner join marathon.cooking c on c.dish_id = d.id "
