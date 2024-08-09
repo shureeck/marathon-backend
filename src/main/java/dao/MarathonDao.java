@@ -1,6 +1,7 @@
 package dao;
 
 import entities.DayEntity;
+import entities.FoodEntity;
 import entities.GraficEntity;
 import entities.WeekEntity;
 import enums.Days;
@@ -10,7 +11,6 @@ import utils.Utils;
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.Map;
 import java.util.Objects;
 
 @Builder
@@ -61,10 +61,8 @@ public class MarathonDao extends PostgreDaoAbstract {
             }
             String recipeId = rs.getString("id");
 
-            Map<String, String> foodMap = Map.of(food, recipeId);
-
             GraficEntity graficEntity = new GraficEntity(eatName, time);
-            graficEntity.addFood(foodMap);
+            graficEntity.addFood(new FoodEntity(recipeId, food));
 
             DayEntity dayEntity = new DayEntity(day);
             dayEntity.addGrafic(graficEntity);

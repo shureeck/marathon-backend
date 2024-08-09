@@ -1,5 +1,6 @@
 package dao;
 
+import entities.FoodEntity;
 import entities.GraficEntity;
 import utils.Utils;
 
@@ -35,7 +36,7 @@ public class AllDishesDao extends PostgreDaoAbstract {
                     graficEntity = new GraficEntity(key, null);
                     result.add(graficEntity);
                 }
-                graficEntity.addFood(Map.of(tittle, recipeID));
+                graficEntity.addFood(new FoodEntity(recipeID, tittle));
             }
             result.sort(Comparator.comparing(GraficEntity::getName));
             return Utils.objectToJson(result);
