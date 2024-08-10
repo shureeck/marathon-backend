@@ -86,6 +86,9 @@ public class Handler {
             case "/marathonTittle":
                 handler = new MarathonTitleHandler(logger, role, userId);
                 break;
+            case "/share":
+                handler= new ShareHandler(logger);
+                    break;
             default:
                 return response
                         .withStatusCode(400)
