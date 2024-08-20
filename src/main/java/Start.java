@@ -12,7 +12,9 @@ import java.util.Map;
 
 public class Start {
     public static void main(String... args) {
-        JWTVerifier verifier = JWT.require(Algorithm.HMAC256("key".getBytes())).build();
+        Dao d = UsersDao.builder().marathonId("1").build();
+        d.get();
+       /* JWTVerifier verifier = JWT.require(Algorithm.HMAC256("key".getBytes())).build();
         try {
             DecodedJWT decodedJWT = verifier.verify("eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJmaXJzdG5hbWUiOiJPbGVrc2FuZHIiLCJyb2xlIjoiQWRtaW4iLCJpZCI6IjEiLCJ1c2VybmFtZSI6InBvbGlha292YWxlZWtAZ21haWwuY29tIiwibGFzdG5hbWUiOiJQb2xpYWtvdiIsImV4cGlyYXRpb24iOiIyMDI0LTAyLTEyVDEwOjI5OjI5LjA1NloifQ.QjNePJDtkiJe_6QxWH09U1pbOIUpd3zMkT-pH7h91HI");
         } catch (SignatureVerificationException e) {
