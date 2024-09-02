@@ -1,7 +1,6 @@
 package dao;
 
 import lombok.Builder;
-import org.postgresql.jdbc.PgResultSet;
 import utils.Utils;
 
 import java.sql.Connection;
@@ -10,7 +9,6 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Objects;
 
 
@@ -30,8 +28,15 @@ public class UsersDao extends PostgreDaoAbstract {
             "join marathon.marathon.marathon_assign ma on ma.user_id = u.id " +
             "where  ma.marathon_id = ?;";
 
+    private static final String INSERT = "insert into marathon.users " +
+            "(username, password, lastname, firstname, role) " +
+            "values (?, ?, ?, ?, ?);";
+
+    private static final int ROLE = 3;
     private String userName;
     private String password;
+    private String firstName;
+    private String lastName;
     private String marathonId;
 
     @Override
@@ -75,7 +80,20 @@ public class UsersDao extends PostgreDaoAbstract {
     }
 
     @Override
-    public <T> T put(String string) {
+    public Integer put(String string) {
+        try (Connection connection = getConnection();
+             PreparedStatement statement = connection.prepareStatement(INSERT)) {
+            statement.setString(1, userName);
+            statement.setString(2, password);
+            statement.setString(3, lastName);
+            statement.setString(4, firstName);
+            statement.setInt(5, ROLE);
+            int i = statement.executeUpdate();
+            return i;
+        } catch (SQLException exception) {
+            exception.printStackTrace();
+
+        }
         return null;
     }
 
