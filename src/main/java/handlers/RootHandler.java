@@ -5,11 +5,14 @@ import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyResponseEvent
 import dao.CookingDao;
 import dao.Dao;
 import dao.MarathonDao;
+import enums.Languages;
 import lombok.AllArgsConstructor;
 
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Objects;
+
+import static utils.Utils.translate;
 
 @AllArgsConstructor
 public class RootHandler implements IHandler {
@@ -26,7 +29,7 @@ public class RootHandler implements IHandler {
             case "GET":
                 logger.log("Method: RootHandler::GET");
                 return (Objects.nonNull(parameters) && parameters.containsKey("dish"))
-                        ? getDataForGetWithDishId(response, parameters.get("dish"))
+                        ? getDataForGetWithDishId(response, parameters)
                         : getDataForGetMarathon(response, parameters);
             case "POST":
                 logger.log("Method: RootHandler::POST");
@@ -65,16 +68,59 @@ public class RootHandler implements IHandler {
             id = Integer.valueOf(parameters.get("id"));
         }
         Dao dao = MarathonDao.builder().id(id).userId(userId).userRole(userRole).build();
-        return response.withStatusCode(200).withBody(dao.get());
+        String sqlResp = dao.get();
+
+        if (Objects.nonNull(parameters) && parameters.containsKey("loc") && !parameters.get("loc").equals("ua")) {
+            Languages lang = Languages.get(parameters.get("loc"));
+            if (Objects.nonNull(lang)) {
+                switch (lang) {
+                    case english:
+                        sqlResp = sqlResp.replaceAll("Тиждень", "Week")
+                                .replaceAll("Понеділок", "Monday")
+                                .replaceAll("Вівторок", "Tuesday")
+                                .replaceAll("Середа", "Wednesday")
+                                .replaceAll("Четвер", "Thursday")
+                                .replaceAll("П'ятниця", "Friday")
+                                .replaceAll("Субота", "Saturday")
+                                .replaceAll("Неділя", "Sunday")
+                                .replaceAll("Сніданок", "Breakfast")
+                                .replaceAll("Перекус", "Snack")
+                                .replaceAll("Обід", "Lunch")
+                                .replaceAll("Вечеря", "Supper");
+                        break;
+                    case polish:
+                        sqlResp = sqlResp.replaceAll("Тиждень", "Tydzień")
+                                .replaceAll("Понеділок", "Poniedziałek")
+                                .replaceAll("Вівторок", "Wtorek")
+                                .replaceAll("Середа", "Środa")
+                                .replaceAll("Четвер", "Czwartek")
+                                .replaceAll("П'ятниця", "Piątek")
+                                .replaceAll("Субота", "Sobota")
+                                .replaceAll("Неділя", "Niedziela")
+                                .replaceAll("Сніданок", "Śniadanie")
+                                .replaceAll("Перекус", "Przekąska")
+                                .replaceAll("Обід", "Obiad")
+                                .replaceAll("Вечеря", "Kolacja");
+                        break;
+                }
+            }
+        }
+        return response.withStatusCode(200).withBody(sqlResp);
     }
 
-    private APIGatewayProxyResponseEvent getDataForGetWithDishId(APIGatewayProxyResponseEvent response, String dishID) {
+    private APIGatewayProxyResponseEvent getDataForGetWithDishId(APIGatewayProxyResponseEvent response, HashMap<String, String> parameters) {
+        String dishID = parameters.get("dish");
         Dao dao = new CookingDao(Integer.valueOf(dishID));
-        String result = dao.get();
-        if (Objects.nonNull(result)) {
+        String sqlResp = dao.get();
+
+        if (parameters.containsKey("loc") && !parameters.get("loc").equals("ua")) {
+            Languages lang = Languages.get(parameters.get("loc"));
+            sqlResp = translate(sqlResp, lang);
+        }
+        if (Objects.nonNull(sqlResp)) {
             return response
                     .withStatusCode(200)
-                    .withBody(dao.get());
+                    .withBody(sqlResp);
         } else {
             return response
                     .withStatusCode(404)

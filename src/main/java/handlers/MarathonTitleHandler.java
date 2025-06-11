@@ -3,14 +3,15 @@ package handlers;
 import com.amazonaws.services.lambda.runtime.LambdaLogger;
 import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyResponseEvent;
 import dao.Dao;
-import dao.MarathonDao;
-import dao.MarathonListDao;
 import dao.MarathonListHeaderDao;
+import enums.Languages;
 import lombok.AllArgsConstructor;
 
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Objects;
+
+import static utils.Utils.translate;
 
 @AllArgsConstructor
 public class MarathonTitleHandler implements IHandler {
@@ -31,8 +32,13 @@ public class MarathonTitleHandler implements IHandler {
                     id = Integer.valueOf(parameters.get("id"));
                 }
                 Dao dao = MarathonListHeaderDao.builder().marathonId(id).userId(userId).userRole(userRole).build();
+                String sqlResp = dao.get();
+                if (Objects.nonNull(parameters) && parameters.containsKey("loc") && !parameters.get("loc").equals("ua")) {
+                    Languages lang = Languages.get(parameters.get("loc"));
+                    sqlResp = translate(sqlResp, lang);
+                }
                 return response.withStatusCode(200)
-                        .withBody(dao.get());
+                        .withBody(sqlResp);
             default:
                 return response.withStatusCode(400)
                         .withBody(String.format("Method %s is not supported.", method));
